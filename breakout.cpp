@@ -7,17 +7,21 @@
  * --------------------------------------------------------
  */
 
-#include <iostream>     //library for keyboard input
-
-#include "fgcugl.h"     //fgcu library for OpenGl
-
 #include <string>       //window title
+
+#include <iostream>     //library for keyboard input
 
 #include <math.h>       //calculating formulas
 
 #include <iomanip>      //set precision functions
 
 #define _USE_MATH_DEFINES  //PI
+
+#include "fgcugl.h"     //fgcu library for OpenGl
+
+#include "Line.h"       // Line class
+
+#include "Point.h"      //Point class
 
 //global constants
 const int WINDOW_WIDTH = 800;
@@ -28,34 +32,13 @@ const std::string WINDOW_TITLE = "Slope - Intercept Project";
 //enum
 enum Mode {TWO_POINT = 1 , POINT_SLOPE, EXIT};
 
-//structures
-struct Point {          //structure property for X and Y coordinates.
-    float coordinateX;
-    float coordinateY;
-};
-
-struct Line {           //structure to graph the line
-    Point firstCoordinate;
-    Point secondCoordinate;
-    float slope;
-    float interceptY;
-    float length;
-    float angle;
-};
 
 //functions prototypes
 Mode getProblem();     //get user input and return
 Point getPoint();
-void  get2Point(Line &line);
-void getPointSlope(Line &line);
+void  get2Point(Line& line);
+void getPointSlope(Line& line);
 void calcLine (Mode mode, Line &line);
-
-
-//methods
-float slopeFrom2Point (Line &line);
-float slopeIntercept(Line slope);
-float lineLenght (Line line);
-float lineAngle (Line line);
 
 //display methods
 void displayLine (Line line);
@@ -67,11 +50,17 @@ void drawLine (Line line);
 
 int main() {
 
-    Line line;
     Mode form;
 
 
-        bool check = false;
+    //creat a Line object
+    Point firstCoor;
+    Point secondCoor;
+    float slope;
+    Line line = Line( firstCoor, secondCoor, slope);
+
+
+    bool check = false;
 
     while (!check){
         //calling the functions to get the user input
@@ -79,16 +68,27 @@ int main() {
 
         if(form == TWO_POINT)
         {
+            //display user input for two point
             get2Point(line);
+
             calcLine(form, line);
+
+            //display Line and outputs
             displayLine(line);
             display2pt(line);
             displaySlopeIntercept(line);
             drawLine(line);
         }
         else if (form == POINT_SLOPE) {
+
+            //display user input for two point
+
             getPointSlope(line);
+
             calcLine(form, line);
+
+
+            //display Line and outputs
             displayLine(line);
             displayPointSlope(line);
             displaySlopeIntercept(line);
@@ -96,8 +96,8 @@ int main() {
         }
         else  {
             check = true;
-            }
         }
+    }
 
 
 
@@ -153,19 +153,21 @@ Mode getProblem()
 */
 Point getPoint()
 {
-    Point point;
-
-    float firstCoordinateX, firstCoordinateY;
+    //crete point object
+    float coordinateX;
+    float coordinateY;
+    Point point = Point(coordinateX, coordinateY);
 
     //first coordinates outputs
     std:: cout << "\nEnter the first points:" << std:: endl;
     std:: cout << "Enter X and Y coordinates separated by spaces: ";
 
     //first coordinates inputs
-    std:: cin >> firstCoordinateX >> firstCoordinateY;
+    std:: cin >> coordinateX  >> coordinateY;
 
-    point.coordinateX = firstCoordinateX;
-    point.coordinateY = firstCoordinateY;
+    point.setXCoordinate(coordinateX);
+    point.setYcoordinate(coordinateY);
+
 
     return point;
 }       //end of getPoint function
@@ -182,8 +184,9 @@ Point getPoint()
 
 void  get2Point(Line &line)
 {
-    line.firstCoordinate = getPoint();
-    line.secondCoordinate = getPoint();
+    line.setFirstCoordinate(getPoint()) ;
+
+    line.setSecondCoordinate(getPoint());
 
     return;
 }       // end of get2Point function
@@ -201,17 +204,29 @@ void getPointSlope(Line &line)
 {
     float slope;
 
-    line.firstCoordinate = getPoint();
+    line.setFirstCoordinate(getPoint());
+
 
     //output for user to input the slope
     std:: cout << "Enter slope value: ";
     std:: cin >> slope;
 
-    line.slope = slope;
+
+
+    line.setSlopePoint(slope);
 
     return;
 }
 
+
+/**
+ Display the line on the screen
+
+ Parameters:
+
+ returns:
+
+ */
 
 /**
   Calculate the line
@@ -228,114 +243,39 @@ void calcLine (Mode mode, Line &line)
     //TWO-POINT
     if(mode == TWO_POINT)
     {
-        line.slope = slopeFrom2Point(line);
-        line.interceptY = slopeIntercept(line);
+        line.calcSlope();
+        line.calcYInt();
     }
 
-    //POINT-SLOPE
+        //POINT-SLOPE
     else if(mode == POINT_SLOPE)
     {
-        line.secondCoordinate.coordinateX = 0.0;
-        line.interceptY = slopeIntercept(line);
-        line.secondCoordinate.coordinateY = line.interceptY;
+        //set thee Y second coordinate to the Y-intercept
+        line.calcYInt();
+        line.setSecondCoordinate(Point(0.0, line.calcYInt()));
     }
 
-    line.length = lineLenght(line);     //insert the float variable into the Line structure property length
-    line.angle = lineAngle(line);       //insert float variable into Line structure property angle.
 
     return;
 }       //end of calcLine function
-
-/**
- Calculate slope from two points
-
- Parameters:
-
- returns:
-    float       slope of the line with two points
- */
-float slopeFrom2Point (Line &line)
+void displayLine(Line line)
 {
 
+    //display of the line numbers
+    std:: cout <<std::fixed << std::setprecision(0) <<  "Line:" << std:: endl;
 
-    float slope = (line.secondCoordinate.coordinateY - line.firstCoordinate.coordinateY) / (line.secondCoordinate.coordinateX - line.firstCoordinate.coordinateX);
+    std:: cout << "\tPoint 1  (" << line.getFirstCoordinate().getXCoordinate()
+    << ", " << line.getFirstCoordinate().getYCoordinate() << ")" << std::endl;
 
-    return slope;
-}       //end of slopeFrom2Point method
+    std:: cout << "\tPoint 2  (" << line.getSecondCoordinate().getXCoordinate() << ", "
+    << line.getSecondCoordinate().getYCoordinate() << ")" << std::endl;
 
-/**
- Calculate y-intercept
+    std:: cout << "\t  Slope = " << std::setprecision(1) << line.calcSlope() << std::endl;
+    std:: cout << "\tY-Intcpt = " << std::setprecision(0) << line.calcYInt() << std::endl;
+    std:: cout << "\t Length = " << line.calcLength() << std::endl;
+    std:: cout << "\t  Angle = " << line.calcAngle() << std:: endl;
 
- Parameters:
-    Point p      structure Point coordinates x and y
-    Line slope   structure Line slope
-
- returns:
-    float        slope of the line with two points
- */
-float slopeIntercept(Line slope)
-{
-     float interceptY;
-     interceptY = slope.firstCoordinate.coordinateY - (slope.slope * slope.firstCoordinate.coordinateX);
-
-     return interceptY;
-}       //end of the slopeIntercept method
-
-/**
- Takes the line and return the distance between two points.
-
- Parameters:
-
- returns:
-    float        distance between two points.
- */
- float lineLenght (Line line)
-{
-     float distance;
-
-     distance = sqrt( pow((line.secondCoordinate.coordinateX - line.firstCoordinate.coordinateX),2) + pow((line.secondCoordinate.coordinateY - line.firstCoordinate.coordinateY),2) );
-
-    return distance;
-}       //end of lineLength method
-
-/**
- Takes the line and returns the line angle from the top Y axis or zero degrees as a float.
-
- Parameters:
-
- returns:
-    float        distance between two points.
- */
- float lineAngle (Line line)
-{
-     float angle;
-
-     angle = fmod((90.0 - (atan((line.secondCoordinate.coordinateY - line.firstCoordinate.coordinateY) / (line.secondCoordinate.coordinateX - line.firstCoordinate.coordinateX))* (180.0 / M_PI)) ), 360.0);
-                        //fmod function has the numerator and the denominator as param-list and returns the answer of the divisor.
-     return angle;
-}       //end of lineAngle method
-
-/**
- Display the line on the screen
-
- Parameters:
-
- returns:
-
- */
- void displayLine(Line line)
-{
-
-     //display of the line numbers
-     std:: cout <<std::fixed << std::setprecision(0) <<  "Line:" << std:: endl;
-     std:: cout << "\tPoint 1  (" << line.firstCoordinate.coordinateX << ", " << line.firstCoordinate.coordinateY << ")" << std::endl;
-     std:: cout << "\tPoint 2  (" << line.secondCoordinate.coordinateX << ", " << line.secondCoordinate.coordinateY << ")" << std::endl;
-     std:: cout << "\t  Slope = " << std::setprecision(1) << line.slope << std::endl;
-     std:: cout << "\tY-Intcpt = " << std::setprecision(0) << line.interceptY << std::endl;
-     std:: cout << "\t Length = " << line.length << std::endl;
-     std:: cout << "\t  Angle = " << line.angle << std:: endl;
-
-     return ;
+    return ;
 }       // end of the displayLine numbers method
 
 /**
@@ -352,9 +292,9 @@ void display2pt (Line line)
 
     //display of the 2 point slope numbers
     std:: cout << std::fixed << std::setprecision(0) <<"Two-Point form:" << std:: endl;
-    std:: cout << "\t\t(" << line.secondCoordinate.coordinateY << " - " << line.firstCoordinate.coordinateY << ")" << std:: endl;
+    std:: cout << "\t\t(" << line.getSecondCoordinate().getYCoordinate() << " - " << line.getFirstCoordinate().getYCoordinate() << ")" << std:: endl;
     std:: cout << "\tm = ---------------" << std:: endl;
-    std:: cout << "\t\t(" << line.secondCoordinate.coordinateX << " - " << line.firstCoordinate.coordinateX << ")" << std:: endl;
+    std:: cout << "\t\t(" << line.getSecondCoordinate().getXCoordinate() << " - " << line.getFirstCoordinate().getXCoordinate() << ")" << std:: endl;
 
 
     return;
@@ -369,14 +309,14 @@ void display2pt (Line line)
  returns:
 
  */
- void displayPointSlope (Line line)
+void displayPointSlope (Line line)
 {
 
-     //display the the point slope form
-     std:: cout <<"Point - Slope form:" << std:: endl;
-     std:: cout << "\ty - " << line.firstCoordinate.coordinateY << " = " << std::setprecision(1) << line.slope << std::setprecision(0) << "(x - " << line.firstCoordinate.coordinateX << ")\n" ;
+    //display the the point slope form
+    std:: cout <<"Point - Slope form:" << std:: endl;
+    std:: cout << "\ty - " << line.getFirstCoordinate().getYCoordinate() << " = " << std::setprecision(1) << line.calcSlope() << std::setprecision(0) << "(x - " << line.getFirstCoordinate().getXCoordinate() << ")\n" ;
 
-     return ;
+    return ;
 }       //end of the displayPointSlope method
 
 
@@ -388,14 +328,14 @@ void display2pt (Line line)
  returns:
 
  */
- void displaySlopeIntercept (Line line)
+void displaySlopeIntercept (Line line)
 {
 
-     //out the the slope intercept form
-     std:: cout << "Slope-intercept form:" << std:: endl;
-     std:: cout << "\ty = " << std::setprecision(1) << line.slope << "x + " << std::setprecision(1) << line.interceptY << std:: endl;
+    //out the the slope intercept form
+    std:: cout << "Slope-intercept form:" << std:: endl;
+    std:: cout << "\ty = " << std::setprecision(1) << line.calcSlope() << "x + " << std::setprecision(1) << line.calcYInt() << std:: endl;
 
-     return;
+    return;
 }       //end of the displaySLopeIntercept method
 
 
@@ -421,7 +361,10 @@ void drawLine (Line line)
 
 
         //draw the slope intercept form line
-        fgcugl:: drawLine(line.firstCoordinate.coordinateX + (WINDOW_WIDTH / 2), line.firstCoordinate.coordinateY + (WINDOW_HEIGHT /2), line.secondCoordinate.coordinateX + (WINDOW_WIDTH /2), line.secondCoordinate.coordinateY + (WINDOW_HEIGHT /2));
+        fgcugl:: drawLine(line.getFirstCoordinate().getXCoordinate() + (WINDOW_WIDTH / 2),
+                          line.getFirstCoordinate().getYCoordinate() + (WINDOW_HEIGHT /2),
+                          line.getSecondCoordinate().getXCoordinate() + (WINDOW_WIDTH /2),
+                          line.getSecondCoordinate().getYCoordinate() + (WINDOW_HEIGHT /2));
 
         fgcugl:: windowPaint();
 
